@@ -1,0 +1,13 @@
+{
+  "name": "YouTube Sentiment Analysis API (Codespace)",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "forwardPorts": [7860],
+  "portsAttributes": {
+    "7860": {
+      "label": "FastAPI Sentiment API",
+      "onAutoForward": "notify",
+      "requireLocalPort": true
+    }
+  },
+  "postCreateCommand": "pip install --no-cache-dir -r requirements-prod.txt"
+}
