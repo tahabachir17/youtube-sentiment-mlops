@@ -1,190 +1,121 @@
 <!DOCTYPE html>
-<html lang="fr" data-theme="dark">
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YouTube Sentiment Analyzer</title>
+  <title>TP3 - Analyse Sentiment YouTube</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div class="app-container">
-    <!-- Header -->
-    <header class="app-header">
-      <div class="header-branding">
-        <div class="logo-badge">
-          <svg viewBox="0 0 24 24" class="yt-icon" fill="currentColor">
-            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-          </svg>
-        </div>
-        <div>
-          <h1 class="app-title">YT Sentiment</h1>
-          <span class="app-subtitle">MLOps Cloud AI</span>
-        </div>
-      </div>
-      <div class="header-actions">
-        <button id="themeToggleBtn" class="icon-btn" title="Basculer thème Sombre/Clair">
-          <span id="themeIcon">☀️</span>
-        </button>
-        <button id="settingsToggleBtn" class="icon-btn" title="Configuration API">
-          ⚙️
-        </button>
-      </div>
-    </header>
+  <div class="container">
+    <h2>TP3 : Analyse Sentiment YouTube</h2>
+    <p class="subtitle">Cloud Computing & MLOps</p>
 
-    <!-- Settings Drawer (Collapsible) -->
-    <div id="settingsPanel" class="settings-panel hidden">
-      <div class="settings-header">
-        <span>Configuration Backend API</span>
-        <button id="closeSettingsBtn" class="small-close-btn">&times;</button>
+    <!-- API Config & Status -->
+    <div class="box api-box">
+      <div class="status-row">
+        <span>Statut API : <b id="statusText">Vérification...</b></span>
+        <button id="toggleConfigBtn" class="small-btn">⚙️ Config</button>
       </div>
-      <div class="settings-body">
-        <label for="apiUrlInput">URL de l'API REST :</label>
-        <input type="text" id="apiUrlInput" value="http://localhost:7860" placeholder="https://votre-space.hf.space">
-        <div class="settings-presets">
-          <button type="button" class="preset-btn" data-url="http://localhost:7860">Local (7860)</button>
-          <button type="button" class="preset-btn" data-url="http://127.0.0.1:7860">127.0.0.1</button>
+      <div id="configSection" class="config-section hidden">
+        <label>URL API :</label>
+        <input type="text" id="apiUrlInput" value="http://localhost:7860">
+        <div class="config-actions">
+          <button id="saveConfigBtn" class="small-btn">Enregistrer</button>
+          <button id="testConfigBtn" class="small-btn">Tester</button>
         </div>
-        <div class="settings-actions">
-          <button id="testApiBtn" class="secondary-btn">Tester Connexion</button>
-          <button id="saveSettingsBtn" class="primary-btn">Enregistrer</button>
-        </div>
-        <div id="apiTestStatus" class="api-test-status"></div>
+        <span id="configMsg"></span>
       </div>
     </div>
 
-    <!-- API Health / Status Bar -->
-    <div class="status-bar">
-      <div class="status-indicator">
-        <span id="statusDot" class="status-dot checking"></span>
-        <span id="statusText">Connexion API...</span>
-      </div>
-      <span id="latencyBadge" class="latency-badge hidden">0 ms</span>
-    </div>
-
-    <!-- Main Control Panel -->
-    <section class="control-panel">
-      <div class="control-row">
+    <!-- Extraction Controls -->
+    <div class="box control-box">
+      <div class="form-group">
         <label for="commentLimitSelect">Nombre de commentaires :</label>
-        <select id="commentLimitSelect" class="custom-select">
-          <option value="20">20 commentaires</option>
-          <option value="50" selected>50 commentaires (Standard)</option>
-          <option value="100">100 commentaires</option>
-          <option value="200">200 commentaires (Complet)</option>
+        <select id="commentLimitSelect">
+          <option value="20">20</option>
+          <option value="50" selected>50</option>
+          <option value="100">100</option>
         </select>
       </div>
-
-      <button id="analyzeBtn" class="action-btn">
-        <span class="btn-icon">⚡</span>
-        <span class="btn-text">Extraire & Analyser</span>
-      </button>
-    </section>
-
-    <!-- Error/Notice Alert Banner -->
-    <div id="alertBanner" class="alert-banner hidden">
-      <span id="alertMessage"></span>
-      <button id="dismissAlertBtn" class="close-alert">&times;</button>
+      <button id="analyzeBtn" class="btn-primary">Analyser les commentaires</button>
     </div>
 
-    <!-- Loading State -->
-    <div id="loadingState" class="loading-state hidden">
-      <div class="spinner"></div>
-      <p id="loadingText" class="loading-text">Extraction des commentaires YouTube...</p>
-      <div class="progress-subtext">Défilement intelligent de la page en cours</div>
+    <!-- Alert / Notice -->
+    <div id="alertBanner" class="alert hidden">
+      <span id="alertMessage"></span>
+    </div>
+
+    <!-- Loading message -->
+    <div id="loadingState" class="loading hidden">
+      <p>⏳ Extraction et analyse en cours...</p>
     </div>
 
     <!-- Results Section -->
-    <main id="resultsSection" class="results-section hidden">
-      <!-- Sentiment Overview Hero Card -->
-      <div class="summary-hero">
-        <div class="hero-header">
-          <span class="hero-label">Sentiment Général</span>
-          <div id="predominantBadge" class="sentiment-pill positive">Positif</div>
-        </div>
-        <div class="hero-content">
-          <div class="score-display">
-            <span class="score-label">Score Global</span>
-            <span id="sentimentScore" class="score-number">+0.68</span>
-            <span class="score-range">[-1.00 à +1.00]</span>
-          </div>
-          <div class="hero-divider"></div>
-          <div class="confidence-display">
-            <span class="score-label">Confiance Moyenne</span>
-            <span id="avgConfidence" class="confidence-number">91.4%</span>
-            <span id="analyzedCountSub" class="count-sub">50 analysés</span>
-          </div>
-        </div>
+    <div id="resultsSection" class="hidden">
+      <!-- Simple Summary Box -->
+      <div class="box summary-box">
+        <h3>Résultats de l'analyse</h3>
+        <p>Sentiment dominant : <b id="predominantText">-</b> (Score : <span id="sentimentScore">0</span>)</p>
+        <p>Confiance moyenne : <span id="avgConfidence">0%</span></p>
 
-        <!-- Segmented Progress Bar -->
-        <div class="distribution-bar-wrapper">
-          <div class="distribution-bar">
-            <div id="barPositive" class="bar-segment pos" style="width: 60%;" title="Positifs"></div>
-            <div id="barNeutral" class="bar-segment neu" style="width: 25%;" title="Neutres"></div>
-            <div id="barNegative" class="bar-segment neg" style="width: 15%;" title="Négatifs"></div>
-          </div>
-        </div>
+        <!-- Basic table for stats -->
+        <table class="stats-table">
+          <thead>
+            <tr>
+              <th>Classe</th>
+              <th>Nombre</th>
+              <th>Pourcentage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row-pos">
+              <td>🟢 Positifs</td>
+              <td id="posCount">0</td>
+              <td id="posPct">0%</td>
+            </tr>
+            <tr class="row-neu">
+              <td>🟡 Neutres</td>
+              <td id="neuCount">0</td>
+              <td id="neuPct">0%</td>
+            </tr>
+            <tr class="row-neg">
+              <td>🔴 Négatifs</td>
+              <td id="negCount">0</td>
+              <td id="negPct">0%</td>
+            </tr>
+          </tbody>
+        </table>
 
-        <!-- Metric Counters Row -->
-        <div class="metrics-grid">
-          <div class="metric-card pos-card">
-            <span class="metric-icon">🟢</span>
-            <div class="metric-info">
-              <span id="posCount" class="metric-val">30</span>
-              <span id="posPct" class="metric-sub">60% Positifs</span>
-            </div>
-          </div>
-          <div class="metric-card neu-card">
-            <span class="metric-icon">🟡</span>
-            <div class="metric-info">
-              <span id="neuCount" class="metric-val">12</span>
-              <span id="neuPct" class="metric-sub">24% Neutres</span>
-            </div>
-          </div>
-          <div class="metric-card neg-card">
-            <span class="metric-icon">🔴</span>
-            <div class="metric-info">
-              <span id="negCount" class="metric-val">8</span>
-              <span id="negPct" class="metric-sub">16% Négatifs</span>
-            </div>
-          </div>
+        <!-- Simple visual bar -->
+        <div class="simple-bar">
+          <div id="barPositive" class="bar-pos" style="width: 33%"></div>
+          <div id="barNeutral" class="bar-neu" style="width: 33%"></div>
+          <div id="barNegative" class="bar-neg" style="width: 34%"></div>
         </div>
       </div>
 
-      <!-- Action Toolbar (Export / Copy) -->
-      <div class="action-toolbar">
-        <button id="copySummaryBtn" class="toolbar-btn" title="Copier le résumé statistique">
-          📋 Copier Résumé
-        </button>
-        <button id="exportCsvBtn" class="toolbar-btn" title="Télécharger les commentaires en CSV">
-          📊 Export CSV
-        </button>
-        <button id="exportJsonBtn" class="toolbar-btn" title="Télécharger au format JSON">
-          📦 Export JSON
-        </button>
+      <!-- Actions -->
+      <div class="actions-row">
+        <button id="copySummaryBtn" class="small-btn">📋 Copier résumé</button>
+        <button id="exportCsvBtn" class="small-btn">Export CSV</button>
+        <button id="exportJsonBtn" class="small-btn">Export JSON</button>
       </div>
 
-      <!-- Filter Tabs & Search -->
-      <div class="feed-controls">
-        <div class="filter-tabs">
-          <button class="filter-tab active" data-filter="all">Tous (<span id="tabCountAll">0</span>)</button>
-          <button class="filter-tab" data-filter="positive">Positifs (<span id="tabCountPos">0</span>)</button>
-          <button class="filter-tab" data-filter="neutral">Neutres (<span id="tabCountNeu">0</span>)</button>
-          <button class="filter-tab" data-filter="negative">Négatifs (<span id="tabCountNeg">0</span>)</button>
-        </div>
-        <div class="search-box">
-          <input type="text" id="searchInput" placeholder="Filtrer les commentaires par mot-clé...">
-        </div>
+      <!-- Filters & Search -->
+      <div class="filter-row">
+        <button class="filter-btn active" data-filter="all">Tous (<span id="tabCountAll">0</span>)</button>
+        <button class="filter-btn" data-filter="positive">Positifs (<span id="tabCountPos">0</span>)</button>
+        <button class="filter-btn" data-filter="neutral">Neutres (<span id="tabCountNeu">0</span>)</button>
+        <button class="filter-btn" data-filter="negative">Négatifs (<span id="tabCountNeg">0</span>)</button>
       </div>
 
-      <!-- Comments List Feed -->
-      <div id="commentsFeed" class="comments-feed">
-        <!-- Rendered dynamically -->
-      </div>
-    </main>
+      <input type="text" id="searchInput" placeholder="Filtrer les commentaires...">
 
-    <!-- Footer -->
-    <footer class="app-footer">
-      <span>TP3 Cloud Computing • Hugging Face & FastAPI</span>
-    </footer>
+      <!-- Comments List -->
+      <div id="commentsFeed" class="comments-list">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
   </div>
 
   <script src="popup.js"></script>

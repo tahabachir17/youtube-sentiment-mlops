@@ -17,5 +17,9 @@ from src.api.main import app
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 7860))
     host = os.environ.get("HOST", "0.0.0.0")
-    print(f"[*] Launching YouTube Sentiment API on {host}:{port}")
+    print("\n" + "=" * 60)
+    print(f"[*] Local Web Browser:   http://localhost:{port}/")
+    print(f"[*] Interactive Swagger: http://localhost:{port}/docs")
+    print(f"[*] Health Check:        http://localhost:{port}/health")
+    print("=" * 60 + "\n")
     uvicorn.run("app_api:app", host=host, port=port, reload=False, workers=1)

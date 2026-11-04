@@ -45,27 +45,30 @@ logging.basicConfig(
 )
 logger = logging.getLogger("sentiment_api")
 
-MODEL_PATH = os.path.join(PROJECT_ROOT, "models", "sentiment_pipeline.joblib")
+MODEL_PATH = os.path.join(PROJECT_ROOT, "models", "sentiment_model2.joblib")
+VECTORIZER_PATH = os.path.join(PROJECT_ROOT, "models", "tfidf_vectorizer2.joblib")
 START_TIME = time.time()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Lifespan context manager that loads ML model artifacts once at startup
-    and shares them across all requests.
+    Lifespan context manager that loads sentiment_model2 and tfidf_vectorizer2 once at startup.
     """
-    logger.info("Starting up YouTube Sentiment API...")
-    if not os.path.exists(MODEL_PATH):
-        logger.error(f"Model file not found at {MODEL_PATH}! Please run train.py first.")
-        app.state.pipeline = None
+    logger.info("Starting up YouTube Sentiment API with sentiment_model2 and tfidf_vectorizer2...")
+    if not os.path.exists(MODEL_PATH) or not os.path.exists(VECTORIZER_PATH):
+        logger.error(f"Model or Vectorizer artifacts missing ({MODEL_PATH}, {VECTORIZER_PATH})")
+        app.state.model = None
+        app.state.vectorizer = None
     else:
         try:
-            app.state.pipeline = joblib.load(MODEL_PATH)
-            logger.info(f"Successfully loaded ML pipeline from: {MODEL_PATH}")
+            app.state.model = joblib.load(MODEL_PATH)
+            app.state.vectorizer = joblib.load(VECTORIZER_PATH)
+            logger.info("Successfully loaded sentiment_model2 and tfidf_vectorizer2.")
         except Exception as e:
-            logger.error(f"Failed to load pipeline: {e}")
-            app.state.pipeline = None
+            logger.error(f"Failed to load artifacts: {e}")
+            app.state.model = None
+            app.state.vectorizer = None
     yield
     logger.info("Shutting down YouTube Sentiment API...")
 
@@ -106,28 +109,29 @@ async def health_check():
     """
     Health check endpoint for monitoring uptime and ML model readiness.
     """
-    model_loaded = app.state.pipeline is not None
+    model_loaded = (app.state.model is not None and app.state.vectorizer is not None)
     uptime = time.time() - START_TIME
     return HealthResponse(
         status="ok" if model_loaded else "degraded",
         model_loaded=model_loaded,
-        model_name="TF-IDF + LogisticRegression (Balanced)",
+        model_name="sentiment_model2 (LogisticRegression) + tfidf_vectorizer2",
         version="1.0.0",
         uptime_seconds=round(uptime, 2),
         supported_labels=["negative (-1)", "neutral (0)", "positive (1)"]
     )
 
 
-def compute_prediction_for_text(pipeline, raw_text: str) -> CommentPrediction:
+def compute_prediction_for_text(model, vectorizer, raw_text: str) -> CommentPrediction:
     """Helper to run inference and build structured prediction object."""
     cleaned = clean_text(raw_text)
     # Default fallback for completely empty strings
     eval_text = cleaned if len(cleaned.strip()) > 0 else "neutral"
 
-    # Prediction & probabilities
-    pred_label = int(pipeline.predict([eval_text])[0])
-    probas = pipeline.predict_proba([eval_text])[0]
-    classes = pipeline.classes_
+    # Vectorize and predict
+    features = vectorizer.transform([eval_text])
+    pred_label = int(model.predict(features)[0])
+    probas = model.predict_proba(features)[0]
+    classes = model.classes_
 
     # Map classes to sentiment probabilities
     prob_dict = {
@@ -157,14 +161,14 @@ async def predict_single(request: SingleCommentRequest):
     """
     Analyzes sentiment of a single comment.
     """
-    if app.state.pipeline is None:
+    if app.state.model is None or app.state.vectorizer is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Model is not loaded. Please train or provide model artifacts."
+            detail="Model or vectorizer is not loaded."
         )
 
     t0 = time.perf_counter()
-    result = compute_prediction_for_text(app.state.pipeline, request.text)
+    result = compute_prediction_for_text(app.state.model, app.state.vectorizer, request.text)
     duration_ms = (time.perf_counter() - t0) * 1000
     logger.info(f"Single inference processed in {duration_ms:.2f}ms | Result: {result.sentiment}")
     return result
@@ -176,8 +180,9 @@ async def predict_batch(request: BatchCommentRequest):
     Analyzes a batch of comments and returns predictions, probabilities,
     and aggregated sentiment statistics.
     """
-    pipeline = app.state.pipeline
-    if pipeline is None:
+    model = app.state.model
+    vectorizer = app.state.vectorizer
+    if model is None or vectorizer is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Model is not loaded. Please check /health for status."
@@ -197,9 +202,10 @@ async def predict_batch(request: BatchCommentRequest):
     eval_comments = [c if len(c.strip()) > 0 else "neutral" for c in cleaned_comments]
 
     # Vectorized batch inference
-    preds = pipeline.predict(eval_comments)
-    probas = pipeline.predict_proba(eval_comments)
-    classes = pipeline.classes_
+    features = vectorizer.transform(eval_comments)
+    preds = model.predict(features)
+    probas = model.predict_proba(features)
+    classes = model.classes_
 
     predictions: List[CommentPrediction] = []
     positive_count = 0

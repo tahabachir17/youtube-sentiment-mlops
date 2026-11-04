@@ -13,16 +13,34 @@ from sklearn.metrics import accuracy_score
 from src.utils.text_cleaning import clean_text
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PIPELINE_PATH = os.path.join(PROJECT_ROOT, "models", "sentiment_pipeline.joblib")
+MODEL_PATH = os.path.join(PROJECT_ROOT, "models", "sentiment_model2.joblib")
+VEC_PATH = os.path.join(PROJECT_ROOT, "models", "tfidf_vectorizer2.joblib")
 TEST_DATA_PATH = os.path.join(PROJECT_ROOT, "data", "processed", "test.csv")
 
 
 @pytest.fixture(scope="module")
 def loaded_pipeline():
-    """Loads the persisted sentiment pipeline once for all tests in this module."""
-    assert os.path.exists(PIPELINE_PATH), f"Pipeline artifact not found at {PIPELINE_PATH}"
-    pipeline = joblib.load(PIPELINE_PATH)
-    return pipeline
+    """Loads the model2 and vectorizer2 into a callable predict wrapper."""
+    assert os.path.exists(MODEL_PATH), f"Model not found at {MODEL_PATH}"
+    assert os.path.exists(VEC_PATH), f"Vectorizer not found at {VEC_PATH}"
+    model = joblib.load(MODEL_PATH)
+    vec = joblib.load(VEC_PATH)
+
+    class ModelWrapper:
+        def __init__(self, m, v):
+            self.m = m
+            self.v = v
+            self.classes_ = m.classes_
+
+        def predict(self, texts):
+            features = self.v.transform(texts)
+            return self.m.predict(features)
+
+        def predict_proba(self, texts):
+            features = self.v.transform(texts)
+            return self.m.predict_proba(features)
+
+    return ModelWrapper(model, vec)
 
 
 def test_model_artifact_exists_and_loads(loaded_pipeline):
