@@ -127,9 +127,12 @@ def train_and_evaluate():
         "Logistic Regression (balanced, C=1.5)": LogisticRegression(
             C=1.5, max_iter=1000, class_weight="balanced", random_state=42, solver="lbfgs"
         ),
-        "Calibrated LinearSVC (C=1.0)": CalibratedClassifierCV(
+        "Support Vector Machine (LinearSVC)": CalibratedClassifierCV(
             LinearSVC(C=1.0, random_state=42, dual="auto", max_iter=2000),
             cv=3
+        ),
+        "Random Forest (n_estimators=100)": RandomForestClassifier(
+            n_estimators=100, max_depth=30, n_jobs=-1, random_state=42
         ),
         "SGDClassifier (log_loss, alpha=1e-5)": SGDClassifier(
             loss="log_loss", alpha=1e-5, max_iter=1000, random_state=42

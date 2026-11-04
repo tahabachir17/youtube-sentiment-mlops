@@ -7,10 +7,12 @@ let appState = {
   predictions: [],
   statistics: null,
   activeFilter: "all",
-  searchQuery: ""
+  searchQuery: "",
+  theme: "light"
 };
 
 // Elements
+const themeToggleBtn = document.getElementById("themeToggleBtn");
 const statusText = document.getElementById("statusText");
 const toggleConfigBtn = document.getElementById("toggleConfigBtn");
 const configSection = document.getElementById("configSection");
@@ -52,7 +54,6 @@ const commentsFeed = document.getElementById("commentsFeed");
 
 const copySummaryBtn = document.getElementById("copySummaryBtn");
 const exportCsvBtn = document.getElementById("exportCsvBtn");
-const exportJsonBtn = document.getElementById("exportJsonBtn");
 
 // Init
 document.addEventListener("DOMContentLoaded", async () => {
@@ -60,9 +61,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (savedUrl) appState.apiUrl = savedUrl;
   apiUrlInput.value = appState.apiUrl;
 
+  const savedTheme = localStorage.getItem("tp_theme") || "light";
+  applyTheme(savedTheme);
+
   checkApi();
   setupEvents();
 });
+
+function applyTheme(theme) {
+  appState.theme = theme;
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("tp_theme", theme);
+  if (themeToggleBtn) {
+    themeToggleBtn.textContent = theme === "dark" ? "☀️ Clair" : "🌙 Sombre";
+  }
+}
 
 async function checkApi() {
   statusText.textContent = "Test...";
@@ -141,8 +154,12 @@ function setupEvents() {
     });
   });
 
+  themeToggleBtn.addEventListener("click", () => {
+    const newTheme = appState.theme === "dark" ? "light" : "dark";
+    applyTheme(newTheme);
+  });
+
   exportCsvBtn.addEventListener("click", exportCsv);
-  exportJsonBtn.addEventListener("click", exportJson);
 }
 
 function showAlert(msg) {

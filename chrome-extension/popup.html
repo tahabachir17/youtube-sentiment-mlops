@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <title>TP3 - Analyse Sentiment YouTube</title>
@@ -7,8 +7,13 @@
 </head>
 <body>
   <div class="container">
-    <h2>TP3 : Analyse Sentiment YouTube</h2>
-    <p class="subtitle">Cloud Computing & MLOps</p>
+    <div class="header-row">
+      <div>
+        <h2>TP3 : Analyse Sentiment YouTube</h2>
+        <p class="subtitle">Cloud Computing & MLOps</p>
+      </div>
+      <button id="themeToggleBtn" class="small-btn" title="Basculer Mode Sombre/Clair">🌙 Sombre</button>
+    </div>
 
     <!-- API Config & Status -->
     <div class="box api-box">
@@ -94,11 +99,10 @@
         </div>
       </div>
 
-      <!-- Actions -->
+      <!-- Actions (Export JSON removed) -->
       <div class="actions-row">
         <button id="copySummaryBtn" class="small-btn">📋 Copier résumé</button>
-        <button id="exportCsvBtn" class="small-btn">Export CSV</button>
-        <button id="exportJsonBtn" class="small-btn">Export JSON</button>
+        <button id="exportCsvBtn" class="small-btn">📊 Export CSV</button>
       </div>
 
       <!-- Filters & Search -->
