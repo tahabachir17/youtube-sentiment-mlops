@@ -1,0 +1,58 @@
+{
+  "best_algorithm": "Logistic Regression",
+  "best_hyperparameters": {
+    "C": 3.0,
+    "class_weight": "balanced",
+    "solver": "lbfgs"
+  },
+  "cross_val_accuracy": 0.8503624675147039,
+  "test_accuracy": 0.8675967719874162,
+  "target_accuracy_met": true,
+  "f1_per_class": {
+    "negative": 0.7924528301886793,
+    "neutral": 0.9027488151658768,
+    "positive": 0.8770035982989859
+  },
+  "macro_avg_f1": 0.8574017478845141,
+  "weighted_avg_f1": 0.8668302747354365,
+  "latency_batch_50_avg_ms": 9.596315997187048,
+  "latency_batch_50_p95_ms": 13.97755999932997,
+  "latency_criteria_met": true,
+  "comparison_results": [
+    {
+      "name": "Logistic Regression (lbfgs, C=1.0)",
+      "accuracy": 0.8443441389686773,
+      "f1_macro": 0.8234775873012959,
+      "precision_macro": 0.8503963354728173,
+      "recall_macro": 0.8141117531473349
+    },
+    {
+      "name": "Logistic Regression (balanced, C=1.5)",
+      "accuracy": 0.8581589385856928,
+      "f1_macro": 0.8479841859802711,
+      "precision_macro": 0.8480049077088259,
+      "recall_macro": 0.8501028052502629
+    },
+    {
+      "name": "Calibrated LinearSVC (C=1.0)",
+      "accuracy": 0.8789495281083299,
+      "f1_macro": 0.8656316460941932,
+      "precision_macro": 0.875566105415254,
+      "recall_macro": 0.8598311107050106
+    },
+    {
+      "name": "SGDClassifier (log_loss, alpha=1e-5)",
+      "accuracy": 0.8660921898509096,
+      "f1_macro": 0.8488000471895761,
+      "precision_macro": 0.8683987335991953,
+      "recall_macro": 0.8408146389114561
+    },
+    {
+      "name": "Complement Naive Bayes",
+      "accuracy": 0.6990835726986733,
+      "f1_macro": 0.6755112847666057,
+      "precision_macro": 0.6914382258593411,
+      "recall_macro": 0.67214951035082
+    }
+  ]
+}

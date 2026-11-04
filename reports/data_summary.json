@@ -1,0 +1,23 @@
+{
+  "raw_total": 37249,
+  "clean_total": 36555,
+  "train_count": 29244,
+  "test_count": 7311,
+  "train_class_distribution": {
+    "1": 12578,
+    "0": 10080,
+    "-1": 6586
+  },
+  "test_class_distribution": {
+    "1": 3144,
+    "0": 2520,
+    "-1": 1647
+  },
+  "train_class_percentages": {
+    "1": 43.01,
+    "0": 34.47,
+    "-1": 22.52
+  },
+  "text_length_mean": 182.49448775817262,
+  "text_word_count_mean": 29.725755710573107
+}
